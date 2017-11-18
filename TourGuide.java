@@ -1,6 +1,6 @@
 package hw1;
 
-import jade.core.Agent;
+import jade.core.*;
 import jade.core.behaviours.*;
 import jade.lang.acl.*;
 import jade.domain.*;
@@ -19,6 +19,7 @@ public class TourGuide extends Agent {
 		addBehaviour(new RegisterOnDF(this));
 		addBehaviour(new ReceiveMessageBehaviour());
 	}
+
 
 	private class RegisterOnDF extends OneShotBehaviour {
 		Agent a;
@@ -54,14 +55,44 @@ public class TourGuide extends Agent {
 		}
 
 		public void processMessage(ACLMessage msg){
-		       if (state == WAIT_FOR_PROFILER) {
-			       processProfilerMessage(msg);
-		       }
+			if (state == WAIT_FOR_PROFILER) {
+				processProfilerMessage(msg);
+			}
 		}
- 		
+
 		public void processProfilerMessage(ACLMessage msg){
-			System.out.println("Profiler said: "+msg.getContent());	
+			// send message to all curator
+			AID[] aids = getAIDs("curator");
+			for (int i = 0; i < aids.length; i++){
+				ACLMessage send_msg = new ACLMessage(ACLMessage.INFORM);
+				send_msg.addReceiver(aids[0]);
+				send_msg.setLanguage("TG");
+				send_msg.setContent(msg.getContent());
+				send(send_msg);
+			}
+			state= WAIT_FOR_CURATOR;
+		}
+
+		private AID[] getAIDs(String service){
+			AID[] aids = null;
+			DFAgentDescription template = new DFAgentDescription();
+			ServiceDescription templateSd = new ServiceDescription();
+			templateSd.setType(service);
+			template.addServices(templateSd);
+			try{
+				DFAgentDescription[] results = DFService.search(myAgent, template);
+				aids = new AID[results.length];
+				for (int i = 0; i<results.length; i ++){
+					aids[i] = results[i].getName();
+				}
+			}
+			catch (FIPAException fe){
+
+				fe.printStackTrace();
+			}
+			return aids;
 		}	
+
 	}
 }
 

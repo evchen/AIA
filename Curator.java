@@ -1,6 +1,8 @@
 package hw1;
 
-import jade.core.Agent;
+import jade.core.*;
+import jade.core.behaviours.*;
+import jade.lang.acl.*;
 
 public class Curator extends Agent{
 	private String S;
@@ -11,5 +13,20 @@ public class Curator extends Agent{
 		for (int i = 0; i<args.length; i++){
 			System.out.println("argument "+ (i+1) +" is " + (String)args[i]);
 		}
+	}
+
+	private class ReceiveMessageBehaviour extends CyclicBehaviour {
+		public void action(){
+			ACLMessage msg = myAgent.receive();
+			if (msg!=null) {
+				if (msg.getLanguage() == "TG"){
+					processTGMessage(msg.getContent());
+				}
+			}
+		}
+		private void processTGMessage(String msg){
+			System.out.println("Curator " + getAID() + " got message" + msg);
+		}
+
 	}
 }	

@@ -41,7 +41,7 @@ public class Profiler extends Agent {
 		}
 		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 		msg.addReceiver(aids[0]);
-		msg.setContent("a message from the profiler to tour guide");
+		msg.setContent((String)getArguments()[0]);
 		send(msg);
 		System.out.println("message sent from profiler");
 
