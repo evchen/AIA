@@ -8,17 +8,14 @@ import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.*;
 
 public class Curator extends Agent{
+
+
 	private String S;
 
 	protected void setup(){
 		addBehaviour(new RegisterOnDF(this));
 		addBehaviour(new ReceiveMessageBehaviour());
 		
-		Object[] args = getArguments();
-		if (args == null || args.length<= 0) return;
-		for (int i = 0; i<args.length; i++){
-			System.out.println("argument "+ (i+1) +" is " + (String)args[i]);
-		}
 	}
 	
 	private class RegisterOnDF extends OneShotBehaviour {
@@ -50,12 +47,12 @@ public class Curator extends Agent{
 			ACLMessage msg = myAgent.receive();
 			if (msg!=null) {
 				if (msg.getLanguage() == "TG"){
-					processTGMessage(msg.getContent());
+					processTGMessage(msg.getContent(),msg.getSender());
 				}
 			}
 		}
-		private void processTGMessage(String msg){
-			System.out.println("Curator " + getAID() + " got message " + msg);
+		private void processTGMessage(String msg, AID sender){
+			
 		}
 
 	}
