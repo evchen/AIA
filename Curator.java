@@ -8,8 +8,13 @@ import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.*;
 
 public class Curator extends Agent{
-
-
+	
+	final String[][] ALL_ARTIFACTS = {
+	{"Twenty Love Poems and a Song of Despair, Pablo Neruda, 1924","The Solitary Reaper, William Wordsworth, 1807","The Fugitive, Alec Brock Stevenson, 1922"},
+	{"Banana, Yellow, Spain", "Apple, Red, Italy","Grape, Green, Chile"},
+	{"Piano Sonata No. 14, Ludwig van Beethoven, 1801","Toccata and Fugue in D Minor, Johann Sebastian Bach, 1801","Hotline Bling, Drake, 2016"}
+	};
+	
 	private String S;
 
 	protected void setup(){
