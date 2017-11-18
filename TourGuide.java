@@ -50,10 +50,18 @@ public class TourGuide extends Agent {
 		}
 		public void action(){
 			ACLMessage msg = myAgent.receive();
-			if (msg!=null) {
-				System.out.println("Received ACL message in Tour Guide: "+ msg.getContent());
-			}
+			if (msg!=null) processMessage(msg);
 		}
+
+		public void processMessage(ACLMessage msg){
+		       if (state == WAIT_FOR_PROFILER) {
+			       processProfilerMessage(msg);
+		       }
+		}
+ 		
+		public void processProfilerMessage(ACLMessage msg){
+			System.out.println("Profiler said: "+msg.getContent());	
+		}	
 	}
 }
 

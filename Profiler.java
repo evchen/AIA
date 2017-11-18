@@ -11,6 +11,25 @@ import jade.lang.acl.*;
 import java.util.Iterator;
 
 public class Profiler extends Agent {
+
+	private AID[] getAID(String service){
+		DFAgentDescription template = new DFAgentDescription();
+		ServiceDescriotion templateSd = new ServiceDescription();
+		templateSd.setType(service);
+		template.addServices(templateSd);
+		try{
+			DFAgentDescription[] results = DFService.search(this, template);
+			AID[] aids = new AID[results.length];
+			for (int i = 0; i<results.length; i ++){
+				AID[i] = results[i].getName();
+			}
+			return AID;
+		}
+		catch (FIPAException fe){
+			
+			fe.printStackTrace();
+		}
+	}	
 	protected void setup(){
 		System.out.println("Profiler is ready");
 		try{
