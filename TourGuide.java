@@ -30,8 +30,8 @@ public class TourGuide extends Agent {
 			DFAgentDescription dfd = new DFAgentDescription();
 			dfd.setName(getAID());
 			ServiceDescription sd = new ServiceDescription();
-			sd.setName("virtural tour guide");
-			sd.setType("virtural-tour");
+			sd.setName("virtual tour guide");
+			sd.setType("virtual-tour");
 			dfd.addServices(sd);
 
 			try{

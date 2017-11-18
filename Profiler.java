@@ -12,51 +12,38 @@ import java.util.Iterator;
 
 public class Profiler extends Agent {
 
-	private AID[] getAID(String service){
+	private AID[] getAIDs(String service){
+		AID[] aids = null;
 		DFAgentDescription template = new DFAgentDescription();
-		ServiceDescriotion templateSd = new ServiceDescription();
+		ServiceDescription templateSd = new ServiceDescription();
 		templateSd.setType(service);
 		template.addServices(templateSd);
 		try{
 			DFAgentDescription[] results = DFService.search(this, template);
-			AID[] aids = new AID[results.length];
+			aids = new AID[results.length];
 			for (int i = 0; i<results.length; i ++){
-				AID[i] = results[i].getName();
+				aids[i] = results[i].getName();
 			}
-			return AID;
 		}
 		catch (FIPAException fe){
 			
 			fe.printStackTrace();
 		}
+		return aids;
 	}	
+	
 	protected void setup(){
 		System.out.println("Profiler is ready");
-		try{
-			DFAgentDescription template = new DFAgentDescription();
-			ServiceDescription templateSd = new ServiceDescription();
-			templateSd.setType("virtural-tour");
-			template.addServices(templateSd);
-			DFAgentDescription[] results = DFService.search(this, template);
-
-			for (int i =0; i < results.length; i ++){
-				System.out.println("virtural tour guide " + i +" with AID " +results[i].getName().getName());
-				Iterator services = results[i].getAllServices();
-				while(services.hasNext()){
-					ServiceDescription sd = (ServiceDescription)services.next();
-					System.out.println("tour guide " + i + " has service " + sd.getName());
-				}
-				
-				ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-				msg.addReceiver(results[i].getName());
-				msg.setContent("a message from the profiler to tour guide");
-				send(msg);
-				System.out.println("message sent from profiler");
-			}
+		AID[] aids = getAIDs("virtual-tour");			
+		if (aids.length<=0){
+			System.out.println("no tour guides");
+			return;
 		}
-		catch(FIPAException fe) {
-			fe.printStackTrace();
-		}
+		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+		msg.addReceiver(aids[0]);
+		msg.setContent("a message from the profiler to tour guide");
+		send(msg);
+		System.out.println("message sent from profiler");
 
 	}
 }
