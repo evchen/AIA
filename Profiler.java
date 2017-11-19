@@ -51,6 +51,7 @@ public class Profiler extends Agent {
 		send(msg);
 		System.out.println("message sent from profiler");
 		SequentialBehaviour sb = new SequentialBehaviour();
+
 		sb.addSubBehaviour(new MsgReceiver(this, null, MsgReceiver.INFINITE, ds, "tgReply"));
 		sb.addSubBehaviour(new OneShotBehaviour(){
 			public void action(){
@@ -59,7 +60,7 @@ public class Profiler extends Agent {
 			}
 		});
 
-		ParallelBehaviour pb = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL){
+		ParallelBehaviour pb1 = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL){
 			public void onStart(){
 				System.out.println("Profiler starts to execute parallel behaviour");
 				for (int i = 0 ; i < cAIDs.length; i ++){
@@ -71,7 +72,35 @@ public class Profiler extends Agent {
 
 			}
 		};
-		sb.addSubBehaviour(pb);	
+		sb.addSubBehaviour(pb1);
+		sb.addSubBehaviour(new OneShotBehaviour(){
+			public void action(){
+				System.out.println("--------------------");
+				System.out.println("Museum Tour");
+			}
+		});
+
+
+		for (int i =0; i < cAIDs.length; i++){
+			sb.addSubBehaviour(new MsgReceiver(this, null, MsgReceiver.INFINITE, ds, "cReply"){
+				public int onEnd(){
+					System.out.println(((ACLMessage)ds.get("cReply")).getContent());
+					return super.onEnd();
+				}
+			});
+		}
+		sb.addSubBehaviour(new MsgReceiver(this, null, MsgReceiver.INFINITE, ds, "cReply"));
+		addBehaviour(new TickerBehaviour(this, 1000){
+			protected void onTick(){
+				System.out.println("Profiler is still alive");
+			}
+		});
+		addBehaviour(new WakerBehaviour(this,10000){
+			protected void onWake(){
+				System.out.println("It is time for this profiler to die");
+				doDelete();
+			}
+		}	);
 		addBehaviour(sb);
 	}
 
@@ -85,7 +114,6 @@ public class Profiler extends Agent {
 		}
 
 		public void action(){
-			System.out.println("Profiller sending message to curator "+receiver);
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			msg.addReceiver(receiver);
 			msg.setLanguage("P");

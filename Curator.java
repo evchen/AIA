@@ -6,6 +6,7 @@ import jade.lang.acl.*;
 import jade.domain.*;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.*;
+import java.util.Random;
 
 public class Curator extends Agent{
 	
@@ -38,7 +39,6 @@ public class Curator extends Agent{
 
 		public void action(){
 			
-		System.out.println("Curator local artifacts are "+local_artifacts[0] );
 			DFAgentDescription dfd = new DFAgentDescription();
 			dfd.setName(getAID());
 			ServiceDescription sd = new ServiceDescription();
@@ -61,26 +61,46 @@ public class Curator extends Agent{
 			ACLMessage msg = myAgent.receive();
 			if (msg!=null) {
 				if (msg.getLanguage() == "TG"){
-					System.out.println("Curator " + agentNo + " received "+msg.getContent() + " from tour guide");
+					//System.out.println("Curator " + agentNo + " received "+msg.getContent() + " from tour guide");
 					processTGMessage(msg.getContent(),msg.getSender());
 				}
 				if (msg.getLanguage() == "P"){
-					System.out.println("Curator " + agentNo + " received "+msg.getContent() + " from profiler");
+					//System.out.println("Curator " + agentNo + " received "+msg.getContent() + " from profiler");
 					processProfilerMessage(msg.getContent(), msg.getSender());
 				}
 			}
 		}
 		private void processProfilerMessage(String msg, AID sender){
-			String[] artfacts = msg.split(";");
-
+			String[] artifacts = msg.split(";");
+			String response = "";
+			for (int i =0; i<artifacts.length; i ++){
+				String aNo = (artifacts[i].split(":"))[0];
+				if (aNo.equals(agentNo)){
+					response = response + findArtifact((artifacts[i].split(":"))[1])+"\n";
+				}
+			}
+			ACLMessage response_msg = new ACLMessage(ACLMessage.INFORM);
+			response_msg.addReceiver(sender);
+			response_msg.setContent(response);
+			send(response_msg);
+						
+		}
+		private String findArtifact(String s){
+			for (int i = 0; i<local_artifacts.length; i ++){
+				if (local_artifacts[i].contains(s)){
+					return local_artifacts[i];
+				}
+				
+			}
+			return "";
 		}
 
 		private void processTGMessage(String msg, AID sender){
 			String[] parts = msg.split(" ");
-			int artifactID = (parts[0].hashCode() + parts[1].hashCode())%3;
+			int artifactID = (parts[0].hashCode() + parts[1].hashCode())%2+1;
 			String reply = "";
-			for (int i =0; i<artifactID; i++){
-				reply =reply + agentNo+" "+local_artifacts[i].split(", ")[0]+";";
+			for (int i =(new Random()).nextInt(2); i<artifactID; i++){
+				reply =reply + agentNo+":"+local_artifacts[i].split(", ")[0]+";";
 			}
 			ACLMessage response_msg = new ACLMessage(ACLMessage.INFORM);
 			response_msg.addReceiver(sender);
