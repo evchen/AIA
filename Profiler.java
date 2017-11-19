@@ -7,10 +7,13 @@ import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.*;
 import jade.core.AID;
 import jade.lang.acl.*;
+import jade.proto.states.MsgReceiver;
 
 import java.util.Iterator;
 
 public class Profiler extends Agent {
+
+	DataStore ds = new DataStore();
 
 	private AID[] getAIDs(String service){
 		AID[] aids = null;
@@ -26,24 +29,69 @@ public class Profiler extends Agent {
 			}
 		}
 		catch (FIPAException fe){
-			
+
 			fe.printStackTrace();
 		}
 		return aids;
 	}	
-	
+
 	protected void setup(){
+		doWait(5000);
 		System.out.println("Profiler is ready");
-		AID[] aids = getAIDs("virtual-tour");			
-		if (aids.length<=0){
+		AID[] tgAIDs = getAIDs("virtual-tour");
+		AID[] cAIDs = getAIDs("curator");
+		if (tgAIDs.length<=0){
 			System.out.println("no tour guides");
 			return;
 		}
 		ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-		msg.addReceiver(aids[0]);
+		msg.setLanguage("P");
+		msg.addReceiver(tgAIDs[0]);
 		msg.setContent((String)getArguments()[0]);
 		send(msg);
 		System.out.println("message sent from profiler");
+		SequentialBehaviour sb = new SequentialBehaviour();
+		sb.addSubBehaviour(new MsgReceiver(this, null, MsgReceiver.INFINITE, ds, "tgReply"));
+		sb.addSubBehaviour(new OneShotBehaviour(){
+			public void action(){
+				ACLMessage acl = (ACLMessage) ds.get("tgReply");
+				System.out.println("profiler received response "+acl.getContent()+" from tour guide");
+			}
+		});
+
+		ParallelBehaviour pb = new ParallelBehaviour(ParallelBehaviour.WHEN_ALL){
+			public void onStart(){
+				System.out.println("Profiler starts to execute parallel behaviour");
+				for (int i = 0 ; i < cAIDs.length; i ++){
+					ACLMessage acl = (ACLMessage) ds.get("tgReply");
+					addSubBehaviour(new SendMessageBehaviour(
+								cAIDs[i],
+								acl.getContent()));
+				}
+
+			}
+		};
+		sb.addSubBehaviour(pb);	
+		addBehaviour(sb);
+	}
+
+	private class SendMessageBehaviour extends OneShotBehaviour{
+		AID receiver;
+		String content;
+
+		public SendMessageBehaviour(AID receiver, String content){
+			this.receiver = receiver;
+			this.content = content;
+		}
+
+		public void action(){
+			System.out.println("Profiller sending message to curator "+receiver);
+			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+			msg.addReceiver(receiver);
+			msg.setLanguage("P");
+			msg.setContent(content);
+			send(msg);
+		}
 
 	}
 }

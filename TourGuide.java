@@ -14,6 +14,8 @@ public class TourGuide extends Agent {
 
 	int state = WAIT_FOR_PROFILER;
 
+	int numberOfCurators;
+
 	protected void setup(){
 		System.out.println("Tour guide " + getAID() +" is ready");
 		addBehaviour(new RegisterOnDF(this));
@@ -46,31 +48,64 @@ public class TourGuide extends Agent {
 	}
 
 	private class ReceiveMessageBehaviour extends CyclicBehaviour {
-		public void onStart(){
-			System.out.println(getAID()+" starting receive message behaviour");
+
+		String combinedResponse = "";
+		AID profilerAID=null;
+
+		public void localReset(){
+			combinedResponse = "";
+			profilerAID = null;
+			state = WAIT_FOR_PROFILER;
 		}
+
 		public void action(){
 			ACLMessage msg = myAgent.receive();
-			if (msg!=null) processMessage(msg);
+			if (msg!=null) {processMessage(msg);}
 		}
 
 		public void processMessage(ACLMessage msg){
-			if (state == WAIT_FOR_PROFILER) {
-				processProfilerMessage(msg);
+			switch (msg.getLanguage()){
+				case "P": processProfilerMessage(msg);
+					  break;
+				case "C": processCuratorMessage(msg);
+					  break;
 			}
+//			if (state == WAIT_FOR_PROFILER) {
+//				processProfilerMessage(msg);
+//			}
+//			if (state == WAIT_FOR_CURATOR){
+//				processCuratorMessage(msg);
+//			}
 		}
 
 		public void processProfilerMessage(ACLMessage msg){
 			// send message to all curator
+			System.out.println("Tour Guide received "+(String)msg.getContent()+" from profiler");
+			profilerAID = msg.getSender();
 			AID[] aids = getAIDs("curator");
 			for (int i = 0; i < aids.length; i++){
 				ACLMessage send_msg = new ACLMessage(ACLMessage.INFORM);
-				send_msg.addReceiver(aids[0]);
+				send_msg.addReceiver(aids[i]);
 				send_msg.setLanguage("TG");
 				send_msg.setContent(msg.getContent());
 				send(send_msg);
 			}
 			state= WAIT_FOR_CURATOR;
+			numberOfCurators = aids.length;
+		}
+
+		public void processCuratorMessage(ACLMessage msg){
+			System.out.println("Tour Guide received "+(String)msg.getContent()+" from Curator");
+			combinedResponse= combinedResponse + (String)msg.getContent();
+			numberOfCurators --;
+			if (numberOfCurators <= 0){
+				ACLMessage response_msg = new ACLMessage(ACLMessage.INFORM);
+				response_msg.addReceiver(profilerAID);
+				response_msg.setContent(combinedResponse);
+				System.out.println("Tour Guide sent "+combinedResponse + " to profiler");
+				send(response_msg);
+				localReset();
+			}
 		}
 
 		private AID[] getAIDs(String service){
